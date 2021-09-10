@@ -1,6 +1,6 @@
 import './App.css'
 import io from 'socket.io-client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 let socket
 
@@ -10,6 +10,13 @@ function App() {
   const [data, setData] = useState([])
   const [loggedIn, setLoggedIn] = useState(false)
   const [myRooms, setMyRooms] = useState([])
+  const [flag, setFlag] = useState(false)
+
+  const [activeUsers, setActiveUsers] = useState([])
+
+  const [boxArr, setBoxArr] = useState(Array(9).fill('X'))
+
+  useEffect(() => console.log(activeUsers), [activeUsers])
 
   function onClickJoin() {
     console.log('join button was clicked!')
@@ -24,6 +31,10 @@ function App() {
       setMyRooms(data)
     })
 
+    socket.on('active_users', (data) => setActiveUsers(data))
+
+    socket.on('game_on', (data) => console.log('The game is on...' + data))
+
     setLoggedIn(true)
   }
 
@@ -32,6 +43,22 @@ function App() {
   }
   function handleDisconnect(room) {
     socket.emit('disconnect_from_room', room)
+  }
+
+  function handleEmit() {
+    socket.emit('accept_the_request', !flag)
+    setFlag((oldFlag) => !oldFlag)
+  }
+  function handleConditionalEmit() {
+    socket.emit('conditional_event', 'Yo! it worked')
+  }
+
+  function handleInvite() {
+    console.log(document.getElementById('data').value.split(',,'))
+    socket.emit(
+      'invite_user',
+      document.getElementById('data').value.split(',,')[0],
+    )
   }
 
   async function fetchData() {
@@ -110,6 +137,29 @@ function App() {
                 </>
               )
             })}
+          </div>
+          <div>
+            <button onClick={handleEmit}>Emit Accepted</button>
+            <button onClick={handleConditionalEmit}>
+              Emit Conditional Event
+            </button>
+          </div>
+          <div>
+            <select id="data">
+              {activeUsers.map((item, key) => (
+                <option key={item.sid} value={`${item.sid},,${item.username}`}>
+                  {item.username}
+                </option>
+              ))}
+            </select>
+            <button onClick={handleInvite}>Invite</button>
+          </div>
+          <div id="board" className="board">
+            {boxArr.map((value, index) => (
+              <div id={`box${index}`} className={`box box${index}`}>
+                {value}
+              </div>
+            ))}
           </div>
         </div>
       </>

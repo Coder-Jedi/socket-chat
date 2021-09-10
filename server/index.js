@@ -13,9 +13,11 @@ const server = app.listen(3001, () => {
 
 let io = socket_io(server)
 
+let flag = false
+
 io.on('connection', (socket) => {
-  console.log(socket.id)
-  console.log(socket.handshake.query.user)
+  // console.log(io.sockets.sockets)
+  // console.log(socket.handshake.query.user)
 
   socket.on('join_room', (data) => {
     socket.join(data.room)
@@ -34,7 +36,38 @@ io.on('connection', (socket) => {
     const socketRooms = Array.from(socket.rooms).splice(1)
     io.to(socket.id).emit('your_rooms', socketRooms)
   })
+
+  socket.on('accept_the_request', (flag_new) => {
+    flag = flag_new
+    console.log('this is the flag returned' + flag)
+  })
+
+  socket.on('conditional_event', (data) => {
+    if (flag) console.log('Yeah, you are successful!' + data)
+  })
+
+  io.sockets.emit('active_users', getActiveUsersInfo())
+
+  socket.on('disconnect', () => {
+    io.sockets.emit('active_users', getActiveUsersInfo())
+  })
+
+  socket.on('invite_user', (userSid) => {
+    socket.join(userSid)
+    io.to(userSid).emit('game_on', userSid)
+  })
 })
+
+function getActiveUsersInfo() {
+  let usersMap = io.sockets.sockets
+  let usersArr = []
+
+  for (let [key, value] of usersMap) {
+    usersArr.push({ sid: key, username: value.handshake.query.user })
+  }
+  console.log(usersArr)
+  return usersArr
+}
 
 //array for list of rooms
 const rooms = ['room1', 'room2', 'room3', 'room4']
