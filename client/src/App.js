@@ -1,12 +1,12 @@
 import './App.css'
 import io from 'socket.io-client'
 import { useEffect, useState } from 'react'
+import LoginScreen from './components/LoginScreen'
 
 let socket
 
 function App() {
   const [room, setRoom] = useState('room1')
-  const [user_name, setUser_name] = useState('')
   const [data, setData] = useState([])
   const [loggedIn, setLoggedIn] = useState(false)
   const [myRooms, setMyRooms] = useState([])
@@ -25,6 +25,7 @@ function App() {
     })
   }
   function handleLogin() {
+    const user_name = document.getElementById("user_name").value
     socket = io('/', { query: `user=${user_name}` })
 
     socket.on('your_rooms', (data) => {
@@ -73,23 +74,10 @@ function App() {
   }
 
   if (!loggedIn)
-    return (
-      <>
-        <div>
-          <input
-            type="text"
-            id="user_name"
-            onChange={(e) => setUser_name(e.target.value)}
-            value={user_name}
-            placeholder="user name"
-          />
-          <button onClick={handleLogin}>Log In</button>
-        </div>
-      </>
-    )
-  else {
-    return (
-      <>
+    return <LoginScreen handleLogin={handleLogin} />
+  return (
+    <>
+      <div>
         <div className="App">
           <div className="gamedetails">
             <select
@@ -162,9 +150,9 @@ function App() {
             ))}
           </div>
         </div>
-      </>
-    )
-  }
+      </div>
+    </>
+  )
 }
 
 export default App
