@@ -1,0 +1,45 @@
+#!/bin/bash
+CLIENT_OUTPUT_FILE=$(pwd)/client.out
+SERVER_OUTPUT_FILE=$(pwd)/server.out
+
+case $1 in
+    setup )
+        cd client && npm i >> ${CLIENT_OUTPUT_FILE} 2>&1 & 
+        cd server && npm i >> ${SERVER_OUTPUT_FILE} 2>&1 &
+        echo "After a few seconds, run:"
+        echo "./run start"
+        ;;
+    view )
+        [ $2 == client ] && tail -f ${CLIENT_OUTPUT_FILE};
+        [ $2 == server ] && tail -f ${SERVER_OUTPUT_FILE};
+        ;;
+    start )
+        # If any node_modules directory doesn't exists
+        if [ ! -d "./client/node_modules" ] || [ ! -d "./server/node_modules" ]; then
+            echo "Please consider running './run setup' command first";
+            exit 1;
+        fi
+        cd server && npm run start >> ${SERVER_OUTPUT_FILE} 2>&1 &
+        cd client && npm run start >> ${CLIENT_OUTPUT_FILE} 2>&1 &
+        echo "To view client logs, run:"
+        echo "./run view client"
+        echo
+        echo "To view server logs, run:"
+        echo "./run view server"
+        echo
+        echo "Or you can view the server.out and client.out files"
+        ;;
+    stop )
+        killall node; # This needs improvement as will kill all node processes
+        ;;
+    * )
+        echo "To start server and client, run:"
+        echo "./run start"
+        echo
+        echo "To stop server and client, run:"
+        echo "./run stop"
+        echo
+        echo "To install all dependencies, run:"
+        echo "./run setup"
+        ;;
+esac
