@@ -16,6 +16,14 @@ function App() {
 
   const [boxArr, setBoxArr] = useState(Array(9).fill('X'))
 
+  //states to handle the game invite
+  const [showInvite, setShowInvite] = useState(false)
+  const [inviteData, setInviteData] = useState({ sid: '', username: '' })
+
+  //states to handle game
+  const [gameDetails, setGameDetails] = useState({})
+  const [playerNum, setPlayerNum] = useState('')
+
   useEffect(() => console.log(activeUsers), [activeUsers])
 
   function onClickJoin() {
@@ -35,6 +43,44 @@ function App() {
 
     socket.on('game_on', (data) => console.log('The game is on...' + data))
 
+    //player2 receiving the 'respond_to_invite' from server with data about player1: step4
+    socket.on('respond_to_invite', (user) => {
+      console.log(
+        'respond_to_invite event caught ' + user.sid + ' ' + user.username,
+      )
+      setInviteData(user)
+      setShowInvite(true)
+    })
+
+    //player2 receiving the 'invite_expired' event along with data about player1 from server(player1) : step9(2.2.1)
+    socket.on('invite_expired_player2', (player1) => {
+      //alerting the player2 that the invite has expired and closing the InviteModal and re-setting the InviteData
+      alert(`The invite from ${player1.username} has expired.`)
+      setShowInvite(false)
+      setInviteData({ sid: '', username: '' })
+    })
+
+    //player1 receiving the 'invite_expired' event along with data about player2 from server(player1): step9(2.2.2)
+    socket.on('invite_expired_player1', (player2) => {
+      alert(`Your invite to ${player2.username} has expired.`)
+    })
+
+    //player1 receiving the 'your_invite_declined' event from server(player2) along with player2 data : step5(2.4)
+    socket.on('your_invite_declined', (player2) => {
+      alert(`Your invite to ${player2.username} was declined.`)
+    })
+
+    //players in the gameroom receiving the event that the game started successfully along with the details of the game room, player1 and player2 : step12
+    socket.on('game_started', (game) => {
+      setGameDetails(game)
+      //checking and setting playerNum for the game
+      let tempPlayerNum = ''
+      if (game.player1.sid === socket.id) tempPlayerNum = '1'
+      else tempPlayerNum = '2'
+      setPlayerNum(tempPlayerNum)
+      alert(`The game started and you are Player ${tempPlayerNum}...`)
+    })
+
     setLoggedIn(true)
   }
 
@@ -53,12 +99,28 @@ function App() {
     socket.emit('conditional_event', 'Yo! it worked')
   }
 
+  //player1 sending the invite: step1
   function handleInvite() {
     console.log(document.getElementById('data').value.split(',,'))
     socket.emit(
       'invite_user',
-      document.getElementById('data').value.split(',,')[0],
+      document.getElementById('data').value.split(',,'),
     )
+  }
+  //player2 accepted the invite, and sent the request to server to initiate game with the player1 data: step5
+  function handleAcceptInvite() {
+    socket.emit('invite_accept_initiated', inviteData)
+    //resetting inviteData and closing the InviteModal
+    setShowInvite(false)
+    setInviteData({ sid: '', username: '' })
+  }
+
+  //player2 rejected the invite, and sent the request to server(player2) with player1 data: step5(2.1)
+  function handleDeclineInvite() {
+    socket.emit('invite_decline_initiated', inviteData)
+    //resetting inviteData and closing the InviteModal
+    setShowInvite(false)
+    setInviteData({ sid: '', username: '' })
   }
 
   async function fetchData() {
@@ -90,6 +152,26 @@ function App() {
   else {
     return (
       <>
+        <div
+          className="inviteModal"
+          style={{ display: `${showInvite ? 'block' : 'none'}` }}
+        >
+          <div className="mask">
+            <div className="modalContainer">
+              <div className="content">
+                <p>{inviteData.username} has invited you for a game.</p>
+              </div>
+              <div className="buttons">
+                <button className="accept" onClick={handleAcceptInvite}>
+                  Accept
+                </button>
+                <button className="decline" onClick={handleDeclineInvite}>
+                  Decline
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
         <div className="App">
           <div className="gamedetails">
             <select

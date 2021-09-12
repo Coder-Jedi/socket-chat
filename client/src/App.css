@@ -14,3 +14,57 @@
   align-content: center;
   font-size: 50px;
 }
+
+.inviteModal {
+  position: fixed;
+  left: 0px;
+  top: 0px;
+}
+.mask {
+  height: 100vh;
+  width: 100vw;
+  background-color: rgba(10, 100, 100, 0.5);
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.modalContainer {
+  height: 135px;
+  width: 440px;
+  background-color: azure;
+  border-radius: 50px;
+  margin: 80px auto;
+
+  display: grid;
+  grid-template-rows: 2fr 1fr;
+  padding: 25px 36px;
+}
+.content {
+  padding-left: 34px;
+  font-size: 20px;
+}
+.modalContainer button {
+  height: 40px;
+  padding: 0 15px;
+
+  color: #f9f9f9;
+  font-size: 16px;
+  font-family: monospace;
+  font-weight: 900;
+  border: none;
+  border-radius: 10px;
+
+  margin: 0 20px;
+
+  cursor: pointer;
+}
+.buttons {
+  display: flex;
+  align-items: center;
+}
+.buttons .accept {
+  background-color: rgb(55 210 112);
+}
+.buttons .decline {
+  background-color: rgb(204 59 27);
+}
