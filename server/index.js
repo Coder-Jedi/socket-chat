@@ -19,7 +19,24 @@ let roomCounter = 0
 const ee = new EventEmitter() // defining this array to communicate between two socket instances on the server itself without emitting to client
 
 io.on('connection', (socket) => {
+
+  // WRAPPER AROUND SOCKET TO KEEP TRACK OF EVENTS
+  // socket = {
+  //   ...s,
+  //   on: function(...args) {
+  //     console.log("CAUGHT", ...args)
+  //     s.on(...args)
+  //   },
+  //   emit: function(...args) {
+  //     console.log("EMITING", ...args)
+  //     s.emit(...args)
+  //   }
+  // }
+
   let flag = false
+
+  let boxArr = Array(9).fill("")
+  let roomName = ""
 
   // console.log(io.sockets.sockets)
   // console.log(socket.handshake.query.user)
@@ -49,6 +66,11 @@ io.on('connection', (socket) => {
 
   socket.on('conditional_event', (data) => {
     if (flag) console.log('Yeah, you are successful!' + data)
+  })
+
+  socket.on("clicked_box", ({playerSymbol, index}) => {
+    boxArr[index] = playerSymbol;
+    io.to(roomName).emit("update_boxarr", boxArr)
   })
 
   io.sockets.emit('active_users', getActiveUsersInfo())
@@ -84,6 +106,9 @@ io.on('connection', (socket) => {
       //adding player2
       player2Socket = io.sockets.sockets.get(player2.sid)
       player2Socket.join(roomName)
+
+      boxArr = Array(9).fill("")
+      io.to(roomName).emit("update_boxarr", boxArr)
 
       //server emitting the event 'game_started' to the new_game_room along with players data and room name: step11
       io.to(roomName).emit('game_started', {

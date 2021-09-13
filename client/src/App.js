@@ -14,7 +14,11 @@ function App() {
 
   const [activeUsers, setActiveUsers] = useState([])
 
-  const [boxArr, setBoxArr] = useState(Array(9).fill('X'))
+  const [boxArr, setBoxArr] = useState([
+    "", "X", "",
+    "O", "X", "",
+    "", "", "O"
+  ])
 
   //states to handle the game invite
   const [showInvite, setShowInvite] = useState(false)
@@ -23,15 +27,23 @@ function App() {
   //states to handle game
   const [gameDetails, setGameDetails] = useState({})
   const [playerNum, setPlayerNum] = useState('')
-  const [showGame, setShowGame] = useState(true)
+  const [showGame, setShowGame] = useState(false)
 
   useEffect(() => console.log(activeUsers), [activeUsers])
 
+  function getPlayerSymbol() {
+    if (playerNum == 1) {
+      return "X"
+    }
+    return "O"
+  }
+
   function onClickJoin() {
     console.log('join button was clicked!')
-    socket.emit('join_room', {
-      room,
-    })
+
+      .emit('join_room', {
+        room,
+      })
   }
   function handleLogin() {
     socket = io('/', { query: `user=${user_name}` })
@@ -42,7 +54,10 @@ function App() {
 
     socket.on('active_users', (data) => setActiveUsers(data))
 
-    socket.on('game_on', (data) => console.log('The game is on...' + data))
+    socket.on('game_on', (data) => {
+      console.log('The game is on...' + data);
+      setShowGame(true);
+    })
 
     //player2 receiving the 'respond_to_invite' from server with data about player1: step4
     socket.on('respond_to_invite', (user) => {
@@ -71,6 +86,10 @@ function App() {
       alert(`Your invite to ${player2.username} was declined.`)
     })
 
+    socket.on("update_boxarr", updatedBoxArr => {
+      setBoxArr(updatedBoxArr);
+    })
+
     //players in the gameroom receiving the event that the game started successfully along with the details of the game room, player1 and player2 : step12
     socket.on('game_started', (game) => {
       setGameDetails(game)
@@ -80,6 +99,7 @@ function App() {
       else tempPlayerNum = '2'
       setPlayerNum(tempPlayerNum)
       alert(`The game started and you are Player ${tempPlayerNum}...`)
+      setShowGame(true)
     })
 
     setLoggedIn(true)
@@ -114,6 +134,7 @@ function App() {
     //resetting inviteData and closing the InviteModal
     setShowInvite(false)
     setInviteData({ sid: '', username: '' })
+    setShowGame(true)
   }
 
   //player2 rejected the invite, and sent the request to server(player2) with player1 data: step5(2.1)
@@ -136,148 +157,190 @@ function App() {
   }
 
   if (!loggedIn)
-    return (
-      <>
-        <div>
-          <input
-            type="text"
-            id="user_name"
-            onChange={(e) => setUser_name(e.target.value)}
-            value={user_name}
-            placeholder="user name"
-          />
-          <button onClick={handleLogin}>Log In</button>
-        </div>
-      </>
-    )
-  else {
-    return (
-      <>
-        {/* following is the div for the game invite modal */}
-        <div
-          id="inviteModal"
-          className="Modal invite"
-          style={{ display: `${showInvite ? 'block' : 'none'}` }}
-        >
-          <div className="mask">
-            <div className="modalContainer">
-              <div className="content">
-                <p>{inviteData.username} has invited you for a game.</p>
-              </div>
-              <div className="buttons">
-                <button className="accept" onClick={handleAcceptInvite}>
-                  Accept
-                </button>
-                <button className="decline" onClick={handleDeclineInvite}>
-                  Decline
-                </button>
-              </div>
+    return LoginScreen()
+  return (
+    <>
+      {InviteModal()}
+      {/* following div is for the game modal */}
+      <div
+        id="gameModal"
+        className="Modal game"
+        style={{ display: `${showGame ? 'block' : 'none'}` }}
+      >
+        <div className="mask">
+          <div className="modalContainer">
+            <div className="info"></div>
+            <div className="content">
+              {GameBoard()}
             </div>
+            {/* {AcceptDeclineButtonsBelowBoard()} */}
           </div>
         </div>
-        {/* following div is for the game modal */}
-        <div
-          id="gameModal"
-          className="Modal game"
-          style={{ display: `${showGame ? 'block' : 'none'}` }}
-        >
-          <div className="mask">
-            <div className="modalContainer">
-              <div className="info"></div>
-              <div className="content">
-                <div id="board" className="board">
-                  {boxArr.map((value, index) => (
-                    <div id={`box${index}`} className={`box box${index}`}>
-                      {value}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="buttons">
-                <button className="accept" onClick={handleAcceptInvite}>
-                  Accept
-                </button>
-                <button className="decline" onClick={handleDeclineInvite}>
-                  Decline
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="App">
-          <div className="gamedetails">
-            <select
-              id="room"
-              onChange={(e) => setRoom(e.target.value)}
-              value={room}
-              placeholder="room"
-            >
-              <option value="room1">Room-1</option>
-              <option value="room2">Room-2</option>
-              <option value="room3">Room-3</option>
-              <option value="room4">Room-4</option>
-            </select>
+      </div>
+      <div className="App">
+        {JoinRoomsAndFetchData()}
+        {MyRooms()}
+        {/* {AllRoomsAndUsers()} */}
+        {/* {TestingEmit()} */}
+        {ListOfActiveUsers()}
+        {/* {OldGameBoard()} */}
+      </div>
+    </>
+  )
 
-            <button onClick={onClickJoin}>Join Room</button>
-          </div>
-          <div>
-            <button onClick={fetchData}>Fetch Data</button>
-          </div>
-          <div>
-            <button onClick={getMyRooms}>My Rooms</button>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <h2>My Rooms:</h2>
-              {myRooms.map((value) => {
-                return (
-                  <div style={{ display: 'inline-flex', alignItems: 'center' }}>
-                    <h3>Room: {value}</h3>
-                    <button
-                      onClick={() => handleDisconnect(value)}
-                      style={{ height: 'max-content' }}
-                    >
-                      Disconnect from this Room
-                    </button>
-                  </div>
-                )
-              })}
+  function GameBoard() {
+
+    function handleBoxClick(index) {
+      if (!socket) return;
+      return function () {
+        socket.emit("clicked_box", { playerSymbol: getPlayerSymbol(), index })
+      }
+    }
+
+    return <div id="board" className="board">
+      {boxArr.map((value, index) => (
+        <div onClick={handleBoxClick(index)} id={`box${index}`} className={`box${value} box${index}`}>
+          {value}
+        </div>
+      ))}
+    </div>
+  }
+
+  function AcceptDeclineButtonsBelowBoard() {
+    return <div className="buttons">
+      <button className="accept" onClick={handleAcceptInvite}>
+        Accept
+      </button>
+      <button className="decline" onClick={handleDeclineInvite}>
+        Decline
+      </button>
+    </div>
+  }
+
+  function JoinRoomsAndFetchData() {
+    return <>
+      <div className="gamedetails">
+        <select
+          id="room"
+          onChange={(e) => setRoom(e.target.value)}
+          value={room}
+          placeholder="room"
+        >
+          <option value="room1">Room-1</option>
+          <option value="room2">Room-2</option>
+          <option value="room3">Room-3</option>
+          <option value="room4">Room-4</option>
+        </select>
+
+        <button onClick={onClickJoin}>Join Room</button>
+      </div>
+      <div>
+        <button onClick={fetchData}>Fetch Data</button>
+      </div>
+    </>
+  }
+
+  function MyRooms() {
+    return <div>
+      <button onClick={getMyRooms}>My Rooms</button>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <h2>My Rooms:</h2>
+        {myRooms.map((value) => {
+          return (
+            <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <h3>Room: {value}</h3>
+              <button
+                onClick={() => handleDisconnect(value)}
+                style={{ height: 'max-content' }}
+              >
+                Disconnect from this Room
+              </button>
             </div>
+          )
+        })}
+      </div>
+    </div>
+  }
+
+  function AllRoomsAndUsers() {
+    return <div>
+      {data.map((value) => {
+        return (
+          <>
+            <h2>Room: {value.room}</h2>
+            <p>ActiveIds: {value.ActiveIds.join(', ')}</p>
+          </>
+        )
+      })}
+    </div>
+  }
+
+  function ListOfActiveUsers() {
+    return <div>
+      <select id="data">
+        {activeUsers.map((item, key) => (
+          <option key={item.sid} value={`${item.sid},,${item.username}`}>
+            {item.username}
+          </option>
+        ))}
+      </select>
+      <button onClick={handleInvite}>Invite</button>
+    </div>
+  }
+
+  function TestingEmit() {
+    return <div>
+      <button onClick={handleEmit}>Emit Accepted</button>
+      <button onClick={handleConditionalEmit}>
+        Emit Conditional Event
+      </button>
+    </div>
+  }
+
+  function OldGameBoard() {
+    return <div id="board" className="board">
+      {boxArr.map((value, index) => (
+        <div id={`box${index}`} className={`box box${index}`}>
+          {value}
+        </div>
+      ))}
+    </div>
+  }
+
+  function InviteModal() {
+    return <div
+      id="inviteModal"
+      className="Modal invite"
+      style={{ display: `${showInvite ? 'block' : 'none'}` }}
+    >
+      <div className="mask">
+        <div className="modalContainer">
+          <div className="content">
+            <p>{inviteData.username} has invited you for a game.</p>
           </div>
-          <div>
-            {data.map((value) => {
-              return (
-                <>
-                  <h2>Room: {value.room}</h2>
-                  <p>ActiveIds: {value.ActiveIds.join(', ')}</p>
-                </>
-              )
-            })}
-          </div>
-          <div>
-            <button onClick={handleEmit}>Emit Accepted</button>
-            <button onClick={handleConditionalEmit}>
-              Emit Conditional Event
+          <div className="buttons">
+            <button className="accept" onClick={handleAcceptInvite}>
+              Accept
+            </button>
+            <button className="decline" onClick={handleDeclineInvite}>
+              Decline
             </button>
           </div>
-          <div>
-            <select id="data">
-              {activeUsers.map((item, key) => (
-                <option key={item.sid} value={`${item.sid},,${item.username}`}>
-                  {item.username}
-                </option>
-              ))}
-            </select>
-            <button onClick={handleInvite}>Invite</button>
-          </div>
-          <div id="board" className="board">
-            {boxArr.map((value, index) => (
-              <div id={`box${index}`} className={`box box${index}`}>
-                {value}
-              </div>
-            ))}
-          </div>
         </div>
-      </>
-    )
+      </div>
+    </div>
+  }
+
+  function LoginScreen() {
+    return <div>
+      <input
+        type="text"
+        id="user_name"
+        onChange={(e) => setUser_name(e.target.value)}
+        value={user_name}
+        placeholder="user name" />
+      <button onClick={handleLogin}>Log In</button>
+    </div>
   }
 }
 
