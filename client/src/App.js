@@ -23,6 +23,7 @@ function App() {
   //states to handle game
   const [gameDetails, setGameDetails] = useState({})
   const [playerNum, setPlayerNum] = useState('')
+  const [showGame, setShowGame] = useState(true)
 
   useEffect(() => console.log(activeUsers), [activeUsers])
 
@@ -152,14 +153,45 @@ function App() {
   else {
     return (
       <>
+        {/* following is the div for the game invite modal */}
         <div
-          className="inviteModal"
+          id="inviteModal"
+          className="Modal invite"
           style={{ display: `${showInvite ? 'block' : 'none'}` }}
         >
           <div className="mask">
             <div className="modalContainer">
               <div className="content">
                 <p>{inviteData.username} has invited you for a game.</p>
+              </div>
+              <div className="buttons">
+                <button className="accept" onClick={handleAcceptInvite}>
+                  Accept
+                </button>
+                <button className="decline" onClick={handleDeclineInvite}>
+                  Decline
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* following div is for the game modal */}
+        <div
+          id="gameModal"
+          className="Modal game"
+          style={{ display: `${showGame ? 'block' : 'none'}` }}
+        >
+          <div className="mask">
+            <div className="modalContainer">
+              <div className="info"></div>
+              <div className="content">
+                <div id="board" className="board">
+                  {boxArr.map((value, index) => (
+                    <div id={`box${index}`} className={`box box${index}`}>
+                      {value}
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className="buttons">
                 <button className="accept" onClick={handleAcceptInvite}>

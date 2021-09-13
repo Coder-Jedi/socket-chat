@@ -15,12 +15,13 @@
   font-size: 50px;
 }
 
-.inviteModal {
+/* following is for invite modal */
+.invite .Modal {
   position: fixed;
   left: 0px;
   top: 0px;
 }
-.mask {
+.invite .mask {
   height: 100vh;
   width: 100vw;
   background-color: rgba(10, 100, 100, 0.5);
@@ -28,7 +29,7 @@
   top: 0;
   left: 0;
 }
-.modalContainer {
+.invite .modalContainer {
   height: 135px;
   width: 440px;
   background-color: azure;
@@ -39,11 +40,11 @@
   grid-template-rows: 2fr 1fr;
   padding: 25px 36px;
 }
-.content {
+.invite .content {
   padding-left: 34px;
   font-size: 20px;
 }
-.modalContainer button {
+.invite .modalContainer button {
   height: 40px;
   padding: 0 15px;
 
@@ -58,13 +59,69 @@
 
   cursor: pointer;
 }
-.buttons {
+.invite .buttons {
   display: flex;
   align-items: center;
 }
-.buttons .accept {
+.invite .buttons .accept {
   background-color: rgb(55 210 112);
 }
-.buttons .decline {
+.invite .buttons .decline {
+  background-color: rgb(204 59 27);
+}
+
+/* following is for game modal */
+.game .Modal {
+  position: fixed;
+  left: 0px;
+  top: 0px;
+}
+.game .mask {
+  height: 100vh;
+  width: 100vw;
+  background-color: rgba(10, 100, 100, 0.5);
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.game .modalContainer {
+  height: 600px;
+  width: 600px;
+  background-color: azure;
+  border-radius: 50px;
+  margin: 80px auto;
+
+  display: grid;
+  grid-template-rows: 1fr 3.5fr 1fr;
+  padding: 25px 36px;
+}
+.game .info {
+}
+.game .content {
+  font-size: 20px;
+}
+.game .modalContainer button {
+  height: 40px;
+  padding: 0 15px;
+
+  color: #f9f9f9;
+  font-size: 16px;
+  font-family: monospace;
+  font-weight: 900;
+  border: none;
+  border-radius: 10px;
+
+  margin: 0 20px;
+
+  cursor: pointer;
+}
+.game .buttons {
+  display: flex;
+  align-items: center;
+}
+.game .buttons .accept {
+  background-color: rgb(55 210 112);
+}
+.game .buttons .decline {
   background-color: rgb(204 59 27);
 }
