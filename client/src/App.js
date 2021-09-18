@@ -28,8 +28,11 @@ function App() {
   const [gameDetails, setGameDetails] = useState({})
   const [playerNum, setPlayerNum] = useState('')
   const [showGame, setShowGame] = useState(false)
+  const [chance, setChance] = useState(true)
 
   useEffect(() => console.log(activeUsers), [activeUsers])
+
+  useEffect(()=> setChance(getPlayerSymbol() == 'X'), [playerNum])
 
   function getPlayerSymbol() {
     if (playerNum == 1) {
@@ -37,6 +40,7 @@ function App() {
     }
     return "O"
   }
+  useEffect(()=>console.log(chance), [chance])
 
   function onClickJoin() {
     console.log('join button was clicked!')
@@ -87,7 +91,7 @@ function App() {
     })
 
     socket.on("update_boxarr", updatedBoxArr => {
-      console.log('UPDATING BOX ARR', updatedBoxArr)
+      setChance(c=>!c)
       setBoxArr(updatedBoxArr);
     })
 
@@ -192,14 +196,12 @@ function App() {
   function GameBoard() {
 
     function handleBoxClick(index) {
-      return function () {
-        socket.emit("clicked_box", { playerSymbol: getPlayerSymbol(), index })
-      }
+      socket.emit("clicked_box", { playerSymbol: getPlayerSymbol(), index })
     }
 
     return <div id="board" className="board">
       {boxArr.map((value, index) => (
-        <div onClick={handleBoxClick(index)} id={`box${index}`} className={`box${value} box${index}`}>
+        <div onClick={() => {if(chance) return handleBoxClick(index); else alert('Not your chance, please wait')}} id={`box${index}`} className={`box${value} box${index}`}>
           {value}
         </div>
       ))}
