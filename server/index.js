@@ -18,6 +18,9 @@ let roomCounter = 0
 
 const ee = new EventEmitter() // defining this array to communicate between two socket instances on the server itself without emitting to client
 
+let boxArr;// = Array(9).fill("")
+let roomName = ""
+
 io.on('connection', (socket) => {
 
   // WRAPPER AROUND SOCKET TO KEEP TRACK OF EVENTS
@@ -34,9 +37,6 @@ io.on('connection', (socket) => {
   // }
 
   let flag = false
-
-  let boxArr = Array(9).fill("")
-  let roomName = ""
 
   // console.log(io.sockets.sockets)
   // console.log(socket.handshake.query.user)
@@ -69,7 +69,9 @@ io.on('connection', (socket) => {
   })
 
   socket.on("clicked_box", ({playerSymbol, index}) => {
+    // console.log(playerSymbol)
     boxArr[index] = playerSymbol;
+    console.log({boxArr, roomName})
     io.to(roomName).emit("update_boxarr", boxArr)
   })
 

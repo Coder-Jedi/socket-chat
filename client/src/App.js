@@ -87,6 +87,7 @@ function App() {
     })
 
     socket.on("update_boxarr", updatedBoxArr => {
+      console.log('UPDATING BOX ARR', updatedBoxArr)
       setBoxArr(updatedBoxArr);
     })
 
@@ -178,8 +179,8 @@ function App() {
         </div>
       </div>
       <div className="App">
-        {JoinRoomsAndFetchData()}
-        {MyRooms()}
+        {/* {JoinRoomsAndFetchData()} */}
+        {/* {MyRooms()} */}
         {/* {AllRoomsAndUsers()} */}
         {/* {TestingEmit()} */}
         {ListOfActiveUsers()}
@@ -191,7 +192,6 @@ function App() {
   function GameBoard() {
 
     function handleBoxClick(index) {
-      if (!socket) return;
       return function () {
         socket.emit("clicked_box", { playerSymbol: getPlayerSymbol(), index })
       }
